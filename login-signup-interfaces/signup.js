@@ -18,6 +18,8 @@ export default function LoginPage() {
         navigation.navigate('UploadedImagesScreen', { aadharFront, aadharBack });
     }; 
 
+    const MAX_IMAGE_SIZE_BYTES = 500 * 1024; // 500 KB in bytes
+
     const handleAadharFrontUpload = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -25,14 +27,20 @@ export default function LoginPage() {
             aspect: [4, 3],
             quality: 1,
         });
-
+    
         console.log(result);
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
+    
+        if (!result.cancelled) {
+            const uri = result.assets[0].uri;
+            const isSizeValid = await checkImageSize(uri); // Check image size
+            if (isSizeValid) {
+                setAadharFront(uri); // Set state only if size is valid
+            } else {
+                alert("Image size exceeds maximum limit of 500 KB"); // Display error message
+            }
         }
     };
-
+    
     const handleAadharBackUpload = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -40,13 +48,29 @@ export default function LoginPage() {
             aspect: [4, 3],
             quality: 1,
         });
-
+    
         console.log(result);
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
+    
+        if (!result.cancelled) {
+            const uri = result.assets[0].uri;
+            const isSizeValid = await checkImageSize(uri); // Check image size
+            if (isSizeValid) {
+                setAadharBack(uri); // Set state only if size is valid
+            } else {
+                alert("Image size exceeds maximum limit of 500 KB"); // Display error message
+            }
         }
     };
+    
+    const checkImageSize = async (uri) => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const imageSizeBytes = blob.size;
+    
+        return imageSizeBytes <= MAX_IMAGE_SIZE_BYTES; // Return true if size is within limit, otherwise false
+    };
+    
+
     const handleLogin = () => {
         // Handle login logic here
         console.log("Username:", username);
